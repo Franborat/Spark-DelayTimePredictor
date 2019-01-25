@@ -25,18 +25,18 @@ abstract class ParametersTuningPipeline {
       .setInputCols(Array("Distance", "TaxiOut", "DepDelay"))
       .setOutputCol("features")
     
-  val pipeline = new Pipeline()
-  .setStages(Array(assembler, estimator))
+    val pipeline = new Pipeline()
+      .setStages(Array(assembler, estimator))
   
-  // Define CrossValidator
-  val cv = new CrossValidator()
-  .setEstimator(pipeline)
-  .setEvaluator(new BinaryClassificationEvaluator)
-  .setEstimatorParamMaps(paramGrid)
-  .setNumFolds(5)
+    // Define CrossValidator
+    val cv = new CrossValidator()
+      .setEstimator(pipeline)
+      .setEvaluator(new BinaryClassificationEvaluator)
+      .setEstimatorParamMaps(paramGrid)
+      .setNumFolds(5)
   
-  // Run cross-validation, and choose the best set of parameters.
-  val cvModel = cv.fit(training)
+    // Run cross-validation, and choose the best set of parameters.
+    val cvModel = cv.fit(training)
   
     (cvModel.bestModel.asInstanceOf[PipelineModel], cvModel.avgMetrics.min)
     
