@@ -16,7 +16,7 @@ class DataPreparation {
     .getOrCreate()
 
   import spark.implicits._
-  def select (data: Dataset[_]): Dataset[_] = {
+  def prepare (data: Dataset[_]): Dataset[_] = {
     logger.info("Selecting the variables that are going to be used")
     // Remove the forbidden variables, except diverted (which has to be used for filtering diverted flights)
     val forbidden = Seq ( "ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "CarrierDelay",

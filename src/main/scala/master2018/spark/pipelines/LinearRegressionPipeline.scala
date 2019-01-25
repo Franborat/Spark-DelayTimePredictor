@@ -1,21 +1,19 @@
 package master2018.spark.pipelines
 
 // A pipelineStage can rather by a transformer or an estimator
-import org.apache.spark.ml.{Estimator, PipelineStage}
-import org.apache.spark.ml.feature.VectorAssembler
+// import org.apache.spark.ml.PipelineStage
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.ml.tuning.ParamGridBuilder
 
 
 class LinearRegressionPipeline extends ParametersTuningPipeline {
-
   
     override def getEstimatorAndParams: (LinearRegression, Array[ParamMap]) = {
 
     val lr = new LinearRegression()
-      .setLabelCol("valor")
-      .setPredictionCol("valor")
+      .setLabelCol("ArrDelay")
+      .setPredictionCol("Prediction")
       .setMaxIter(10)
 
     val paramGrid = new ParamGridBuilder()
