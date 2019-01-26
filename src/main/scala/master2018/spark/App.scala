@@ -18,7 +18,7 @@ import scala.collection.mutable.HashMap
 
 object App {
 
-  val logger = LogManager.getLogger("org")
+  private val logger: Logger = LogManager.getLogger("org")
 
 
   def main(args : Array[String]) {
@@ -44,9 +44,9 @@ object App {
     val inFilePath = args(0)
 
     val data = spark.read.format("csv").option("header", value = true).csv(inFilePath)
-      .withColumn("Year", $"Year".cast("date"))
-      .withColumn("Month", $"Month".cast("date"))
-      .withColumn("DayofMonth", $"DayofMonth".cast("date"))
+      .withColumn("Year", $"Year".cast("int"))
+      .withColumn("Month", $"Month".cast("int"))
+      .withColumn("DayofMonth", $"DayofMonth".cast("int"))
       .withColumn("DayOfWeek", $"DayOfWeek".cast("int"))
       .withColumn("DepTime", $"DepTime".cast("int"))
       .withColumn("CRSDepTime", $"CRSDepTime".cast("int"))
@@ -74,13 +74,19 @@ object App {
       .withColumn("SecurityDelay", $"SecurityDelay".cast("int"))
       .withColumn("LateAircraftDelay", $"LateAircraftDelay".cast("int"))
 
+    DataPreparation.explore(data)
+
     // Get the Data prepared and split it in training and test
-    val Array(train, test) = DataPreparation.preprocess(data).randomSplit(Array(0.7, 0.3))
+    val Array(train, test) = DataPreparation.prepare(data).randomSplit(Array(0.7, 0.3))
 
     // Get the best Linear Regression model
-    val bestLrModel = new LinearRegressionPipeline().bestParamsModel(data)
+    val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
+    logger.info(s"The best Linear Regression model is: $bestLrModel")
+    println(s"The best Linear Regression model is: $bestLrModel")
 
-    logger.info(s"The best Linear Regression model is: $bestLrModel" )
+    val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
+    logger.info(s"The best Random Forest model is: $bestRfModel")
+    println(s"The best Random Forest model is: $bestRfModel")
 
 
 }

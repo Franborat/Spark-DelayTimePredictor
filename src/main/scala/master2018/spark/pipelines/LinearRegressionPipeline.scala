@@ -13,7 +13,7 @@ class LinearRegressionPipeline extends ParametersTuningPipeline {
 
     val lr = new LinearRegression()
       .setLabelCol("ArrDelay")
-      .setPredictionCol("Prediction")
+      .setPredictionCol("prediction")
       .setMaxIter(10)
 
     val paramGrid = new ParamGridBuilder()

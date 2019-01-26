@@ -7,7 +7,7 @@ import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
-import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
+import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.Model
 import org.apache.spark.ml.tuning.CrossValidatorModel
 
@@ -23,8 +23,9 @@ abstract class ParametersTuningPipeline {
 
     //Prepare the assembler that will transform the attributes to a feature vector for the ML algorithms
     val assembler = new VectorAssembler()
-      .setInputCols(training.drop("ArrDelay").columns)
+      .setInputCols(Array("Year", "Month", "DayofMonth", "DayOfWeek","CRSArrMinutes", "CRSElapsedTime", "DepDelay", "Distance", "TaxiOut"))
       .setOutputCol("features")
+
     
     val pipeline = new Pipeline()
       .setStages(Array(assembler, estimator))
@@ -32,14 +33,17 @@ abstract class ParametersTuningPipeline {
     // Define CrossValidator
     val cv = new CrossValidator()
       .setEstimator(pipeline)
-      .setEvaluator(new BinaryClassificationEvaluator)
+      .setEvaluator(new RegressionEvaluator()
+        .setLabelCol("ArrDelay")
+        .setPredictionCol("prediction")
+        .setMetricName("r2"))
       .setEstimatorParamMaps(paramGrid)
       .setNumFolds(5)
-  
+
     // Run cross-validation, and choose the best set of parameters.
     val cvModel = cv.fit(training)
   
-    (cvModel.bestModel.asInstanceOf[PipelineModel], cvModel.avgMetrics.min)
+    (cvModel.bestModel.asInstanceOf[PipelineModel], cvModel.avgMetrics.max)
     
   }
   
