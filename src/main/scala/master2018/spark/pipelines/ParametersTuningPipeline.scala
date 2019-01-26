@@ -21,8 +21,9 @@ abstract class ParametersTuningPipeline {
   // Method bestParamsModel: Returns the best model after doing the cross validation gridSearch
   def bestParamsModel(training: Dataset[_]): (PipelineModel, Double) = {
 
+    //Prepare the assembler that will transform the attributes to a feature vector for the ML algorithms
     val assembler = new VectorAssembler()
-      .setInputCols(Array("Distance", "TaxiOut", "DepDelay"))
+      .setInputCols(training.drop("ArrDelay").columns)
       .setOutputCol("features")
     
     val pipeline = new Pipeline()

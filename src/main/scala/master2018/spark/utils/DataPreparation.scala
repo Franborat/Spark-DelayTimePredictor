@@ -6,7 +6,10 @@ import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.SparkSession
 
-class DataPreparation {
+
+
+
+object DataPreparation {
   private val logger = LogManager.getLogger("org")
 
   private val spark = SparkSession
@@ -96,4 +99,62 @@ class DataPreparation {
     set = set.drop(old: _*)
     set
   }
+
+  def preprocess(dataset: Dataset[_]): Dataset[_] = {
+
+
+    val forbiddenVariables = Seq(
+      "ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted",
+      "CarrierDelay", "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay")
+    logger.info(s"Removing forbidden variables: ${forbiddenVariables.mkString(", ")}")
+    var ds = dataset.drop(forbiddenVariables: _*)
+
+
+    logger.info("Removing cancelled flights")
+    ds = ds.filter(ds("Cancelled") === 0).drop("Cancelled", "CancellationCode")
+
+    // Check null values in target column. They are not expected so I want to inspect
+    val nullValuesDf = ds.filter(ds("ArrDelay").isNull)
+    if (nullValuesDf.count() > 0) {
+      logger.warn("We still have null values! Please check why! We already have removed the expected source of nulls.")
+      nullValuesDf.show()
+      logger.info("Removing remaining null values")
+      ds = ds.filter(ds("ArrDelay").isNotNull)
+    }
+    else {
+      logger.info("No null values in target column")
+    }
+
+    // Convert in minutes since midnight
+    val minutesConverter = udf(
+      (timeString: String) => {
+        val hours =
+          if (timeString.length > 2)
+            timeString.substring(0, timeString.length - 2).toInt
+          else
+            0
+        hours * 60 + timeString.takeRight(2).toInt
+      })
+
+    logger.info("Converting time columns")
+    ds = ds
+      .withColumn("CRSDepTimeMin", minutesConverter(ds("CRSDepTime")))
+      .withColumn("DepTime", minutesConverter(ds("DepTime")))
+
+    // Adding the route, can be interesting
+    logger.info(s"Adding route column")
+    ds = ds.select(ds("*"), concat(ds("Origin"), lit("-"), ds("Dest")).as("Route"))
+
+    // We drop columns that we do not think to be worth it
+    val toDrop = Array("CRSDepTime", "DepTime", "CRSArrTime", "FlightNum", "TailNum")
+    logger.info(s"Dropping non-worthy columns: ${toDrop.mkString(", ")}")
+    ds = ds.drop(toDrop: _*)
+
+    logger.info("Final DataFrame:")
+    ds.show(15)
+
+    ds
+  }
+
+
 }

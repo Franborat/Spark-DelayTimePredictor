@@ -3,25 +3,26 @@ package master2018.spark
 /**
  * @author ${user.name}
  */
-import utils.DataPreparation
-import pipelines._
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.SparkSession
+
+import master2018.spark.pipelines._
 import org.apache.log4j.{Level, LogManager, Logger}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.sql.SparkSession
+
+import master2018.spark.pipelines.LinearRegressionPipeline
+import master2018.spark.utils.DataPreparation
 
 import scala.collection.mutable.HashMap
 
 object App {
 
-  private val logger = LogManager.getLogger("org")
+  val logger = LogManager.getLogger("org")
 
 
   def main(args : Array[String]) {
 
-    import spark.implicits._
 
     Logger.getLogger("org").setLevel(Level.WARN)
 
@@ -36,6 +37,8 @@ object App {
       .config("some option", "value")
       .enableHiveSupport()
       .getOrCreate()
+
+    import spark.implicits._
     
     // Get input data paths from the args we send by console
     val inFilePath = args(0)
@@ -71,29 +74,15 @@ object App {
       .withColumn("SecurityDelay", $"SecurityDelay".cast("int"))
       .withColumn("LateAircraftDelay", $"LateAircraftDelay".cast("int"))
 
+    // Get the Data prepared and split it in training and test
+    val Array(train, test) = DataPreparation.preprocess(data).randomSplit(Array(0.7, 0.3))
 
-    /* DataPreparation.explore(data)
+    // Get the best Linear Regression model
+    val bestLrModel = new LinearRegressionPipeline().bestParamsModel(data)
 
-    val Array(training, test) = DataPreparation.prepare(data).randomSplit(Array(0.8, 0.2))
-    val (modelLR, lrEval) = new LinearRegressionPipeline().bestParamsModel(training)
-    val (modelRF, rfEval) = new RandomForestPipeline().bestParamsModel(training)
+    logger.info(s"The best Linear Regression model is: $bestLrModel" )
 
-    val models : HashMap[PipelineModel, Double] = HashMap(
-        (modelLR, lrEval),
-        (modelRF, rfEval)
-    )
 
-    logger.info("Evaluate best model on the test set")
-    val best: PipelineModel = models.minBy(_._2)._1
-    val predictions = best.transform(test)
-
-    val evaluator = new RegressionEvaluator()
-      .setLabelCol("ArrDelay")
-      .setPredictionCol("Prediction")
-      .setMetricName("mae")
-
-    val testEvaluation = evaluator.evaluate(predictions)
-    logger.info(s"The value for metric Mean Average Error on test set is $testEvaluation")*/
 }
 
 }
