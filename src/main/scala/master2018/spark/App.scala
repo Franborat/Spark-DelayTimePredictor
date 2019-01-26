@@ -80,18 +80,18 @@ object App {
     val Array(train, test) = DataPreparation.prepare(data).randomSplit(Array(0.7, 0.3))
 
     // Get the best Linear Regression model
-    val (bestLrModel, lrRSquare) = new LinearRegressionPipeline().bestParamsModel(train)
-    logger.info(s"The best Linear Regression model is $bestLrModel and its determination coefficient is $lrRSquare")
-    println(s"The best Linear Regression model is $bestLrModel and its determination coefficient is $lrRSquare")
+    val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
 
-    val (bestRfModel, rfRSquare) = new RandomForestPipeline().bestParamsModel(train)
-    logger.info(s"The best Random Forest model is $bestRfModel and its determination coefficient is $rfRSquare")
-    println(s"The best Random Forest model is $bestRfModel and its determination coefficient is $rfRSquare")
 
-    var modelSelected: PipelineModel = bestLrModel
-    if (lrRSquare < rfRSquare) {
-      modelSelected = bestRfModel
-    }
+    //val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
+
+    // Get the best Random Forest model
+    val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
+
+    // Compare the best models of each algorithm and get the overall best Model according to its RSquare
+    val modelSelected = new LinearRegressionPipeline().compareModelsMetricsAndSelectBest()(bestLrModel, bestRfModel)
+
+
 
     val bestTest = modelSelected.transform(test)
 
