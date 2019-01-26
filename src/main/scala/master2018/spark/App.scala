@@ -80,14 +80,29 @@ object App {
     val Array(train, test) = DataPreparation.prepare(data).randomSplit(Array(0.7, 0.3))
 
     // Get the best Linear Regression model
-    val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
-    logger.info(s"The best Linear Regression model is: $bestLrModel")
-    println(s"The best Linear Regression model is: $bestLrModel")
+    val (bestLrModel, lrRSquare) = new LinearRegressionPipeline().bestParamsModel(train)
+    logger.info(s"The best Linear Regression model is $bestLrModel and its determination coefficient is $lrRSquare")
+    println(s"The best Linear Regression model is $bestLrModel and its determination coefficient is $lrRSquare")
 
-    val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
-    logger.info(s"The best Random Forest model is: $bestRfModel")
-    println(s"The best Random Forest model is: $bestRfModel")
+    val (bestRfModel, rfRSquare) = new RandomForestPipeline().bestParamsModel(train)
+    logger.info(s"The best Random Forest model is $bestRfModel and its determination coefficient is $rfRSquare")
+    println(s"The best Random Forest model is $bestRfModel and its determination coefficient is $rfRSquare")
 
+    var modelSelected: PipelineModel = bestLrModel
+    if (lrRSquare < rfRSquare) {
+      modelSelected = bestRfModel
+    }
+
+    val bestTest = modelSelected.transform(test)
+
+    val regEval = new RegressionEvaluator()
+      .setLabelCol("ArrDelay")
+      .setPredictionCol("prediction")
+      .setMetricName("r2")
+
+    val result = regEval.evaluate(bestTest)
+    logger.info(s"The best model has a determination coefficient equal to $result")
+    println(s"The best model has a determination coefficient equal to $result")
 
 }
 
