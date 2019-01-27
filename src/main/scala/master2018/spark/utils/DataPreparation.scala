@@ -1,9 +1,11 @@
 package master2018.spark.utils
 
 import org.apache.log4j.LogManager
+import org.apache.spark.ml.feature.{OneHotEncoderEstimator, StringIndexer}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.ml.Pipeline
 
 object DataPreparation {
   private val logger = LogManager.getLogger("org")
@@ -66,8 +68,24 @@ object DataPreparation {
     set = set.filter($"Diverted" === 0)
     set = set.filter($"Cancelled" === 0).drop("Cancelled", "CancellationCode")
 
-    // Now remove "Diverted" variable, and the other variables we consider are useless for ML training.
-    val removed = Seq("Diverted", "FlightNum", "TailNum", "UniqueCarrier", "Origin", "Dest", "DepTime", "CRSDepTime")
+
+    // Origin and Dest HotEncoding
+    val indexer1 = new StringIndexer().setInputCol("Origin").setOutputCol("OriginIndex")
+    val indexer2 = new StringIndexer().setInputCol("Dest").setOutputCol("DestIndex")
+
+    val encoder = new OneHotEncoderEstimator()
+      .setInputCols(Array(indexer1.getOutputCol, indexer2.getOutputCol))
+      .setOutputCols(Array("OriginVec", "DestVec"))
+
+    val pipeline = new Pipeline().setStages(Array(indexer1, indexer2, encoder))
+
+    set = pipeline.fit(set).transform(set)
+
+    //set = encoder.fit(set).transform(set)
+
+    // Remove "Diverted" variable,
+    // We also remove "FlightNum", "TailNum", "UniqueCarrier", "Origin", "Dest", "DepTime", "CRSDepTime",as we consider are useless for ML training.
+    val removed = Seq("Diverted", "FlightNum", "TailNum", "UniqueCarrier", "DepTime", "CRSDepTime")
     set = set.drop(removed: _*)
 
     // Now it is moment to transform the variables from this data set to understandable ones, extracting meaning.
@@ -94,6 +112,9 @@ object DataPreparation {
     logger.info("Converting time columns")
     set = set.withColumn("CRSArrMinutes", minutesConverter(data("CRSArrTime")))
     set = set.drop("CRSArrTime")
+
+    //set.write.option("header", "true").format("com.databricks.spark.csv").save("dataFiltered.csv")
+
 
     set.show(15)
     set

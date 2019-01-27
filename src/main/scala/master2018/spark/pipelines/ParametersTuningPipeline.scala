@@ -8,26 +8,34 @@ import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.tuning.CrossValidator
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.tuning.CrossValidatorModel
+import org.apache.spark.ml.feature.{OneHotEncoderEstimator, StringIndexer}
 
 
 abstract class ParametersTuningPipeline {
-  
+
   protected def getEstimatorAndParams: (PipelineStage, Array[ParamMap])
-  
+
   val (estimator, paramGrid) = getEstimatorAndParams
-  
+
   // Method bestParamsModel: Returns the best model after doing the cross validation gridSearch
   def bestParamsModel(training: Dataset[_]): CrossValidatorModel = {
 
+
+
+    /*val encoder = new OneHotEncoderEstimator()
+      .setInputCols(Array("Origin", "Dest"))
+      .setOutputCols(Array("OriginVec", "DestVec")) */
+
     //Prepare the assembler that will transform the attributes to a feature vector for the ML algorithms
     val assembler = new VectorAssembler()
-      .setInputCols(Array("Year", "Month", "DayofMonth", "DayOfWeek","CRSArrMinutes", "CRSElapsedTime", "DepDelay", "Distance", "TaxiOut"))
+      //.setInputCols(training.drop("ArrDelay", "Origin", "Dest").columns)
+      .setInputCols(Array("Year", "Month", "OriginVec", "DestVec", "DayofMonth", "DayOfWeek","CRSArrMinutes", "CRSElapsedTime", "DepDelay", "Distance", "TaxiOut"))
       .setOutputCol("features")
 
-    
+
     val pipeline = new Pipeline()
       .setStages(Array(assembler, estimator))
-  
+
     // Define CrossValidator
     val cv = new CrossValidator()
       .setEstimator(pipeline)
@@ -42,7 +50,7 @@ abstract class ParametersTuningPipeline {
     val cvModel = cv.fit(training)
 
     cvModel
-    
+
   }
 
   def compareModelsMetricsAndSelectBest (bestLrModel: CrossValidatorModel, bestRfModel: CrossValidatorModel): PipelineModel = {
@@ -79,10 +87,10 @@ abstract class ParametersTuningPipeline {
     modelSelected.bestModel.asInstanceOf[PipelineModel]
 
   }
-  
+
   //Method compareModelMetrics: Shows the best model metrics and score
   def showModelMetrics(cvModel: CrossValidatorModel, cvModel2: CrossValidatorModel): Unit = {
-    
+
     val avgMetrics = cvModel.avgMetrics
 
     cvModel.getEstimatorParamMaps.zip(avgMetrics).zipWithIndex.foreach {
