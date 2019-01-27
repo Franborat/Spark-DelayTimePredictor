@@ -7,14 +7,12 @@ package master2018.spark
 import master2018.spark.pipelines._
 import org.apache.log4j.{Level, LogManager, Logger}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.sql.SparkSession
 
 import master2018.spark.pipelines.LinearRegressionPipeline
 import master2018.spark.utils.DataPreparation
 
-import scala.collection.mutable.HashMap
 
 object App {
 
@@ -84,12 +82,14 @@ object App {
 
     // Get the best Random Forest model
     val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
+
+    // Others models tried (GLR, Decision Trees and GBT)
     // val bestGlrModel = new GeneralizedLinearRegressionPipeline().bestParamsModel(train)
     // val bestDtModel = new DecisionTreeRegressionPipeline().bestParamsModel(train)
     // val bestGBTModel = new GradientBoostedTreeRegressionPipeline().bestParamsModel(train)
 
     // Compare the best models of each algorithm and get the overall best Model according to its RSquare
-    val modelSelected = new LinearRegressionPipeline().compareModelsMetricsAndSelectBest()(bestLrModel, bestRfModel)
+    val modelSelected = new LinearRegressionPipeline().compareModelsMetricsAndSelectBest(bestLrModel, bestRfModel)
 
 
     val bestTest = modelSelected.transform(test)

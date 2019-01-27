@@ -1,15 +1,12 @@
 package master2018.spark.pipelines
 
-import master2018.spark.App.logger
-import org.apache.spark.ml.{Pipeline, PipelineModel, PipelineStage}
-import org.apache.spark.ml.Estimator
+import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.ml.tuning.CrossValidator
 import org.apache.spark.ml.evaluation.RegressionEvaluator
-import org.apache.spark.ml.Model
 import org.apache.spark.ml.tuning.CrossValidatorModel
 
 
@@ -48,7 +45,7 @@ abstract class ParametersTuningPipeline {
     
   }
 
-  def compareModelsMetricsAndSelectBest() (bestLrModel: CrossValidatorModel, bestRfModel: CrossValidatorModel): (PipelineModel) = {
+  def compareModelsMetricsAndSelectBest (bestLrModel: CrossValidatorModel, bestRfModel: CrossValidatorModel): PipelineModel = {
 
     val rfRSquare = bestRfModel.avgMetrics.max
 
@@ -87,7 +84,6 @@ abstract class ParametersTuningPipeline {
   def showModelMetrics(cvModel: CrossValidatorModel, cvModel2: CrossValidatorModel): Unit = {
     
     val avgMetrics = cvModel.avgMetrics
-    // val avgMetrics2 = cvModel.avgMetrics
 
     cvModel.getEstimatorParamMaps.zip(avgMetrics).zipWithIndex.foreach {
       case ((params, metric), index) =>

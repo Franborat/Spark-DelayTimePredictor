@@ -1,6 +1,6 @@
 package master2018.spark.utils
 
-import org.apache.log4j.{LogManager, Logger}
+import org.apache.log4j.LogManager
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.SparkSession
@@ -79,44 +79,6 @@ object DataPreparation {
     )
     set = set.withColumn("Distance", milesToKm(data("Distance")))
 
-    /*set.withColumn("FormattedYear", date_format($"Year", "yyyy"))
-    set.withColumn("FormattedMonth", date_format($"Month", "MM"))
-    set.withColumn("FormattedDay", date_format($"DayofMonth", "dd"))
-
-    val dates = Seq ("Year", "Month", "DayofMonth")
-    set = set.drop(dates: _*)
-    set.withColumnRenamed("FormattedYear", "Year")
-    set.withColumnRenamed("FormattedMonth", "Month")
-    set.withColumnRenamed("FormattedDay", "DayofMonth")*/
-
-
-    // val aux = set.col("CRSArrTime")
-    // val crs = (aux/100) + ":" + (aux%100)
-    // set.withColumn("CRSArrDate", date_format(crs, format = "hh:mm"))
-
-    /* val dayConverter = udf(
-      (weekDay: Int) => {
-      val output =
-        if (weekDay == 1) {
-          "Monday"
-      } else if (weekDay == 2) {
-          "Tuesday"
-      } else if (weekDay == 3) {
-          "Wednesday"
-      } else if (weekDay == 4) {
-          "Thursday"
-      } else if (weekDay == 5) {
-          "Friday"
-      } else if (weekDay == 6) {
-          "Saturday"
-      } else {
-          "Sunday"
-      }
-        output
-    })
-    set = set.withColumn("WeekDay", dayConverter(set("DayOfWeek")))
-    set = set.drop("DayOfWeek")*/
-
     // Finally, we create new variables that could be helpful to create a better model: CRSArrMinutes
     // Convert in minutes since midnight, creating a new user defined function.
     val minutesConverter = udf(
@@ -136,62 +98,6 @@ object DataPreparation {
     set.show(15)
     set
   }
-
-  /*def preprocess(dataset: Dataset[_]): Dataset[_] = {
-
-
-    val forbiddenVariables = Seq(
-      "ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted",
-      "CarrierDelay", "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay")
-    logger.info(s"Removing forbidden variables: ${forbiddenVariables.mkString(", ")}")
-    var ds = dataset.drop(forbiddenVariables: _*)
-
-
-    logger.info("Removing cancelled flights")
-    ds = ds.filter(ds("Cancelled") === 0).drop("Cancelled", "CancellationCode")
-
-    // Check null values in target column. They are not expected so I want to inspect
-    val nullValuesDf = ds.filter(ds("ArrDelay").isNull)
-    if (nullValuesDf.count() > 0) {
-      logger.warn("We still have null values! Please check why! We already have removed the expected source of nulls.")
-      nullValuesDf.show()
-      logger.info("Removing remaining null values")
-      ds = ds.filter(ds("ArrDelay").isNotNull)
-    }
-    else {
-      logger.info("No null values in target column")
-    }
-
-    // Convert in minutes since midnight
-    val minutesConverter = udf(
-      (timeString: String) => {
-        val hours =
-          if (timeString.length > 2)
-            timeString.substring(0, timeString.length - 2).toInt
-          else
-            0
-        hours * 60 + timeString.takeRight(2).toInt
-      })
-
-    logger.info("Converting time columns")
-    ds = ds
-      .withColumn("CRSDepTimeMin", minutesConverter(ds("CRSDepTime")))
-      .withColumn("DepTime", minutesConverter(ds("DepTime")))
-
-    // Adding the route, can be interesting
-    logger.info(s"Adding route column")
-    ds = ds.select(ds("*"), concat(ds("Origin"), lit("-"), ds("Dest")).as("Route"))
-
-    // We drop columns that we do not think to be worth it
-    val toDrop = Array("CRSDepTime", "DepTime", "CRSArrTime", "FlightNum", "TailNum")
-    logger.info(s"Dropping non-worthy columns: ${toDrop.mkString(", ")}")
-    ds = ds.drop(toDrop: _*)
-
-    logger.info("Final DataFrame:")
-    ds.show(15)
-
-    ds
-  }*/
 
 
 }
