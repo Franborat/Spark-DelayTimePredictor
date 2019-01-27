@@ -37,7 +37,7 @@ object App {
       .getOrCreate()
 
     import spark.implicits._
-    
+
     // Get input data paths from the args we send by console
     val inFilePath = args(0)
 
@@ -83,7 +83,7 @@ object App {
     // Get the best Random Forest model
     val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
 
-    // Others models tried (GLR, Decision Trees and GBT)
+    // Others Machine Learning models tried (GLR, Decision Trees and GBT)
     // val bestGlrModel = new GeneralizedLinearRegressionPipeline().bestParamsModel(train)
     // val bestDtModel = new DecisionTreeRegressionPipeline().bestParamsModel(train)
     // val bestGBTModel = new GradientBoostedTreeRegressionPipeline().bestParamsModel(train)
