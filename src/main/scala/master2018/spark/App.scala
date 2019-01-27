@@ -82,15 +82,14 @@ object App {
     // Get the best Linear Regression model
     val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
 
-
-    //val bestLrModel = new LinearRegressionPipeline().bestParamsModel(train)
-
     // Get the best Random Forest model
     val bestRfModel = new RandomForestPipeline().bestParamsModel(train)
+    // val bestGlrModel = new GeneralizedLinearRegressionPipeline().bestParamsModel(train)
+    // val bestDtModel = new DecisionTreeRegressionPipeline().bestParamsModel(train)
+    // val bestGBTModel = new GradientBoostedTreeRegressionPipeline().bestParamsModel(train)
 
     // Compare the best models of each algorithm and get the overall best Model according to its RSquare
     val modelSelected = new LinearRegressionPipeline().compareModelsMetricsAndSelectBest()(bestLrModel, bestRfModel)
-
 
 
     val bestTest = modelSelected.transform(test)

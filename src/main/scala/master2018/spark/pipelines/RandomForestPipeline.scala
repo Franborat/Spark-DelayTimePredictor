@@ -13,8 +13,8 @@ class RandomForestPipeline extends ParametersTuningPipeline {
       .setPredictionCol("prediction")
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(rf.maxDepth, Array(5, 10))
-      .addGrid(rf.numTrees, Array(10, 20))
+      .addGrid(rf.maxDepth, Array(5,10))
+      .addGrid(rf.numTrees, Array(10,20))
       .build()
 
     (rf, paramGrid)
